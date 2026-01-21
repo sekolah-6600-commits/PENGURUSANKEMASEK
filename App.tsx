@@ -3,203 +3,286 @@ import React, { useState } from 'react';
 import { 
   Users, GraduationCap, HeartHandshake, Trophy, Accessibility, 
   Search, Bell, Plus, Calendar, PieChart, FileText, Settings,
-  Users2, UserCheck, TrendingUp, BookOpen
+  Users2, UserCheck, TrendingUp, BookOpen, Database, Utensils,
+  LogIn, ClipboardList, ShieldAlert, MessageCircle, Camera,
+  ChevronLeft, ChevronRight, Save, Trash2, CheckCircle2, XCircle
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import Sidebar from './components/Sidebar';
 import StatsCard from './components/StatsCard';
 import GeminiAssistant from './components/GeminiAssistant';
 import { ModuleType } from './types';
-import { TEACHERS, STATS, ANNOUNCEMENTS, SCHOOL_NAME, SCHOOL_CODE, MENU_ITEMS } from './constants';
+import { 
+  TEACHERS, STATS, ANNOUNCEMENTS, SCHOOL_NAME, 
+  SCHOOL_CODE, MENU_ITEMS, HEM_CLASSES, HEM_STUDENTS,
+  DISCIPLINE_RECORDS, ACTIVITY_REPORTS
+} from './constants';
 
-const attendanceData = [
-  { name: 'Isnin', rate: 97.2 },
-  { name: 'Selasa', rate: 96.5 },
-  { name: 'Rabu', rate: 98.1 },
-  { name: 'Khamis', rate: 95.8 },
-  { name: 'Jumaat', rate: 94.2 },
-];
-
-const performanceData = [
-  { subject: 'BM', marks: 82 },
-  { subject: 'BI', marks: 76 },
-  { subject: 'MT', marks: 68 },
-  { subject: 'SN', marks: 74 },
-  { subject: 'PI', marks: 88 },
+const studentAnalysisData = [
+  { year: 'Tahun 1', count: 142 },
+  { year: 'Tahun 2', count: 138 },
+  { year: 'Tahun 3', count: 145 },
+  { year: 'Tahun 4', count: 139 },
+  { year: 'Tahun 5', count: 144 },
+  { year: 'Tahun 6', count: 142 },
 ];
 
 const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleType>('DASHBOARD');
+  const [activeHemTab, setActiveHemTab] = useState<string>('MENU');
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [attendance, setAttendance] = useState<Record<string, boolean>>({});
 
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard title="Jumlah Murid" value={STATS.total} icon={<Users className="w-6 h-6" />} colorClass="bg-blue-600" trend="+2.5% bln lepas" />
-        <StatsCard title="Kehadiran Hari Ini" value={`${STATS.attendanceToday}%`} icon={<UserCheck className="w-6 h-6" />} colorClass="bg-emerald-600" />
-        <StatsCard title="Jumlah Guru" value={TEACHERS.length} icon={<Users2 className="w-6 h-6" />} colorClass="bg-purple-600" />
-        <StatsCard title="Pencapaian Koko" value="8 EMAS" icon={<Trophy className="w-6 h-6" />} colorClass="bg-amber-600" trend="MSSD 2024" />
-      </div>
+  const handleAttendanceChange = (studentId: string) => {
+    setAttendance(prev => ({ ...prev, [studentId]: !prev[studentId] }));
+  };
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-800 text-lg">Statistik Kehadiran Mingguan</h3>
-            <select className="bg-slate-100 border-none rounded-lg text-sm px-3 py-1 outline-none">
-              <option>Minggu Ini</option>
-              <option>Minggu Lepas</option>
-            </select>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={[90, 100]} />
-                <Tooltip 
-                  cursor={{fill: '#f8fafc'}}
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                />
-                <Bar dataKey="rate" radius={[4, 4, 0, 0]}>
-                  {attendanceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.rate > 96 ? '#10b981' : '#3b82f6'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+  const renderHemDashboard = () => {
+    const hemButtons = [
+      { id: 'DB', label: 'Pengkalan Data', icon: <Database />, desc: 'Analisis Murid T1-T6' },
+      { id: 'ATT', label: 'Kehadiran Murid', icon: <UserCheck />, desc: 'Rekod Kehadiran Kelas' },
+      { id: 'RMT', label: 'RMT', icon: <Utensils />, desc: 'Rancangan Makanan Tambahan' },
+      { id: 'CTL', label: 'Kawalan Kelas', icon: <LogIn />, desc: 'Log Keluar/Masuk' },
+      { id: 'REP', label: 'Laporan Harian', icon: <ClipboardList />, desc: 'Guru Bertugas' },
+      { id: 'DIS', label: 'Disiplin', icon: <ShieldAlert />, desc: 'Rekod Merit/Demerit' },
+      { id: 'COU', label: 'Unit Kaunseling', icon: <MessageCircle />, desc: 'Bimbingan & Kerjaya' },
+      { id: 'ACT', label: 'Aktiviti Murid', icon: <Camera />, desc: 'Gambar & Laporan' },
+    ];
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 className="font-bold text-slate-800 text-lg mb-6">Pengumuman Terkini</h3>
-          <div className="space-y-4">
-            {ANNOUNCEMENTS.map((ann) => (
-              <div key={ann.id} className="group cursor-pointer">
-                <div className="flex items-start space-x-3">
-                  <div className={`p-2 rounded-lg mt-1 group-hover:scale-110 transition-transform ${
-                    MENU_ITEMS.find(m => m.id === ann.category)?.color || 'bg-slate-200'
-                  } bg-opacity-10 text-xs font-bold`}>
-                    {ann.category.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors leading-snug">{ann.title}</h4>
-                    <p className="text-xs text-slate-400 mt-1">{ann.date}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="w-full mt-6 py-2 text-sm font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
-            Lihat Semua Notifikasi
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+        {hemButtons.map((btn) => (
+          <button
+            key={btn.id}
+            onClick={() => setActiveHemTab(btn.id)}
+            className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:border-rose-200 hover:shadow-xl hover:shadow-rose-50 transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              {btn.icon}
+            </div>
+            <h3 className="font-bold text-slate-800 text-sm">{btn.label}</h3>
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{btn.desc}</p>
           </button>
-        </div>
+        ))}
       </div>
-    </div>
-  );
+    );
+  };
 
-  const renderModuleContent = () => {
-    switch (activeModule) {
-      case 'DASHBOARD':
-        return renderDashboard();
-      case 'PENTADBIRAN':
+  const renderHemSubContent = () => {
+    switch (activeHemTab) {
+      case 'DB':
         return (
-          <div className="space-y-6">
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-slate-800">Direktori Guru & Staf</h2>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center space-x-2 text-sm hover:bg-blue-700 transition-all">
-                  <Plus className="w-4 h-4" />
-                  <span>Tambah Guru</span>
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="pb-4 text-slate-500 font-medium text-sm">Nama</th>
-                      <th className="pb-4 text-slate-500 font-medium text-sm">Jawatan</th>
-                      <th className="pb-4 text-slate-500 font-medium text-sm">Unit/Jabatan</th>
-                      <th className="pb-4 text-slate-500 font-medium text-sm text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {TEACHERS.map((teacher) => (
-                      <tr key={teacher.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-4 font-semibold text-slate-800">{teacher.name}</td>
-                        <td className="py-4 text-slate-600 text-sm">{teacher.position}</td>
-                        <td className="py-4 text-slate-600 text-sm">{teacher.department}</td>
-                        <td className="py-4 text-right">
-                          <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                            Aktif
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-8 animate-fade-in">
+            <h3 className="text-xl font-black text-slate-800 tracking-tight">Analisis Murid SK Kemasek (T1-T6)</h3>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={studentAnalysisData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }} />
+                  <Bar dataKey="count" fill="#e11d48" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         );
-      case 'KURIKULUM':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <h3 className="font-bold text-lg mb-4 flex items-center space-x-2">
-                <TrendingUp className="text-emerald-600 w-5 h-5" />
-                <span>Pencapaian Akademik (Gred Purata Mata Pelajaran)</span>
-              </h3>
-              <div className="h-64 mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="subject" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <Tooltip contentStyle={{borderRadius: '12px'}} />
-                    <Line type="monotone" dataKey="marks" stroke="#10b981" strokeWidth={3} dot={{r: 6, fill: '#10b981'}} />
-                  </LineChart>
-                </ResponsiveContainer>
+      case 'ATT':
+        if (!selectedClass) {
+          return (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-black text-slate-800 tracking-tight">Pilih Kelas (Tahun 1)</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {HEM_CLASSES.map(cls => (
+                  <button
+                    key={cls}
+                    onClick={() => setSelectedClass(cls)}
+                    className="bg-white p-6 rounded-2xl border border-slate-100 hover:border-rose-500 hover:shadow-lg hover:shadow-rose-50 transition-all text-center group"
+                  >
+                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-rose-50 group-hover:text-rose-600 transition-colors">
+                       <Users className="w-5 h-5" />
+                    </div>
+                    <p className="font-black text-lg text-slate-800">{cls}</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Kehadiran Harian</p>
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-              <h3 className="font-bold text-lg mb-2">Pautan Pantas Kurikulum</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 cursor-pointer transition-colors group border border-transparent hover:border-emerald-100">
-                  <FileText className="w-8 h-8 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
-                  <p className="font-bold text-slate-800 text-sm">e-RPH</p>
-                  <p className="text-xs text-slate-500">Rekod Pengajaran Harian</p>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 cursor-pointer transition-colors group border border-transparent hover:border-emerald-100">
-                  <BookOpen className="w-8 h-8 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
-                  <p className="font-bold text-slate-800 text-sm">PBD</p>
-                  <p className="text-xs text-slate-500">Pelaporan Bilik Darjah</p>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 cursor-pointer transition-colors group border border-transparent hover:border-emerald-100">
-                  <Calendar className="w-8 h-8 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
-                  <p className="font-bold text-slate-800 text-sm">Jadual Waktu</p>
-                  <p className="text-xs text-slate-500">Semakan Kelas & Guru</p>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 cursor-pointer transition-colors group border border-transparent hover:border-emerald-100">
-                  <Settings className="w-8 h-8 text-emerald-600 mb-2 group-hover:scale-110 transition-transform" />
-                  <p className="font-bold text-slate-800 text-sm">SAPS</p>
-                  <p className="text-xs text-slate-500">Sistem Analisis Peperiksaan</p>
+          );
+        }
+        return (
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+              <div className="flex items-center space-x-4">
+                <button onClick={() => setSelectedClass(null)} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">{selectedClass}</h3>
+                  <p className="text-xs text-slate-400 font-medium">Rekod Kehadiran: {new Date().toLocaleDateString('ms-MY')}</p>
                 </div>
               </div>
+              <button className="w-full sm:w-auto bg-emerald-600 text-white px-6 py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center space-x-2 shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">
+                <Save className="w-4 h-4" />
+                <span>Simpan Rekod</span>
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <th className="pb-4 px-2">Nama Murid</th>
+                    <th className="pb-4 text-center">Jantina</th>
+                    <th className="pb-4 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {HEM_STUDENTS.filter(s => s.className === selectedClass).map(student => (
+                    <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="py-4 px-2 font-bold text-slate-700 text-sm group-hover:text-rose-600 transition-colors">{student.name}</td>
+                      <td className="py-4 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${student.gender === 'L' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'}`}>
+                          {student.gender}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right">
+                        <button 
+                          onClick={() => handleAttendanceChange(student.id)}
+                          className={`px-4 py-1.5 rounded-xl font-bold text-xs transition-all border ${
+                            attendance[student.id] 
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-100' 
+                            : 'bg-white border-slate-200 text-slate-400 hover:border-emerald-200'
+                          }`}
+                        >
+                          {attendance[student.id] ? 'Hadir' : 'Rekod'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'DIS':
+        return (
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-black text-slate-800 tracking-tight">Rekod Disiplin (SSDM)</h3>
+              <button className="bg-rose-600 text-white px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-rose-100 hover:bg-rose-700 transition-all">+ TAMBAH REKOD</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <th className="pb-4">Nama</th>
+                    <th className="pb-4">Kelas</th>
+                    <th className="pb-4">Jenis</th>
+                    <th className="pb-4 text-right">Mata</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {DISCIPLINE_RECORDS.map(rec => (
+                    <tr key={rec.id} className="hover:bg-slate-50/50">
+                      <td className="py-4 font-bold text-sm">{rec.studentName}</td>
+                      <td className="py-4 text-xs text-slate-500 font-medium">{rec.class}</td>
+                      <td className="py-4">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-black ${rec.type === 'Nilai Terpuji' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          {rec.type}
+                        </span>
+                      </td>
+                      <td className={`py-4 text-right font-black text-sm ${rec.points > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {rec.points > 0 ? '+' : ''}{rec.points}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         );
       default:
         return (
-          <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 text-center">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white p-16 text-center rounded-3xl border border-slate-100 animate-fade-in">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-400">
+               <HeartHandshake className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Modul Pintar HEM</h3>
+            <p className="text-slate-500 mt-2 max-w-sm mx-auto text-sm leading-relaxed font-medium">Kami sedang menyelaraskan pangkalan data untuk bahagian ini. Harap sabar menunggu kemaskini seterusnya.</p>
+            <button onClick={() => setActiveHemTab('MENU')} className="mt-8 px-8 py-3 bg-rose-50 text-rose-600 rounded-2xl font-black text-xs tracking-widest hover:bg-rose-100 transition-colors">
+              KEMBALI KE MENU HEM
+            </button>
+          </div>
+        );
+    }
+  };
+
+  const renderModuleContent = () => {
+    switch (activeModule) {
+      case 'DASHBOARD':
+        return (
+          <div className="space-y-8 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatsCard title="Jumlah Murid" value={STATS.total} icon={<Users className="w-6 h-6" />} colorClass="bg-blue-600" trend="+2.5% bln lepas" />
+              <StatsCard title="Kehadiran Hari Ini" value={`${STATS.attendanceToday}%`} icon={<UserCheck className="w-6 h-6" />} colorClass="bg-emerald-600" />
+              <StatsCard title="Jumlah Guru" value={TEACHERS.length} icon={<Users2 className="w-6 h-6" />} colorClass="bg-purple-600" />
+              <StatsCard title="Pencapaian Koko" value="8 EMAS" icon={<Trophy className="w-6 h-6" />} colorClass="bg-amber-600" trend="MSSD 2024" />
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="font-black text-slate-800 text-xl tracking-tight mb-6">Misi & Visi Digital</h3>
+                <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 leading-relaxed text-slate-700 text-sm font-medium">
+                  Mewujudkan ekosistem pengurusan digital yang cekap, telus, dan berinovasi untuk seluruh warga SK Kemasek selari dengan transformasi pendidikan negara. Kami komited dalam pendigitalan data untuk kemudahan guru dan ibu bapa.
+                </div>
+              </div>
+              
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="font-black text-slate-800 text-xl tracking-tight mb-6">Pengumuman</h3>
+                <div className="space-y-4">
+                  {ANNOUNCEMENTS.map(ann => (
+                    <div key={ann.id} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">{ann.category}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">{ann.date}</span>
+                      </div>
+                      <p className="font-bold text-slate-800 text-sm">{ann.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'HEM':
+        return (
+          <div className="space-y-8">
+            <div className="flex items-center space-x-4 animate-fade-in">
+              {activeHemTab !== 'MENU' && (
+                <button 
+                  onClick={() => { setActiveHemTab('MENU'); setSelectedClass(null); }}
+                  className="p-2 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-400 transition-all shadow-sm"
+                >
+                  <ChevronLeft />
+                </button>
+              )}
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight">
+                {activeHemTab === 'MENU' ? 'Hal Ehwal Murid' : `HEM / ${activeHemTab}`}
+              </h2>
+            </div>
+            {activeHemTab === 'MENU' ? renderHemDashboard() : renderHemSubContent()}
+          </div>
+        );
+      default:
+        return (
+          <div className="bg-white p-20 rounded-3xl shadow-sm border border-slate-100 text-center animate-fade-in">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-300">
               {MENU_ITEMS.find(m => m.id === activeModule)?.icon}
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">Modul {activeModule}</h2>
-            <p className="text-slate-500 mt-2 max-w-md mx-auto">Bahagian ini sedang dalam fasa pembangunan digital. Maklumat lanjut akan dikemaskini dalam masa terdekat.</p>
-            <button 
-              onClick={() => setActiveModule('DASHBOARD')}
-              className="mt-8 text-blue-600 font-semibold hover:underline"
-            >
-              Kembali ke Dashboard
+            <h2 className="text-3xl font-black text-slate-800 tracking-tight">Modul {activeModule}</h2>
+            <p className="text-slate-500 mt-4 max-w-md mx-auto font-medium leading-relaxed">Pembangunan sistem untuk modul ini sedang giat dijalankan bagi memastikan kualiti terbaik untuk pengguna.</p>
+            <button onClick={() => setActiveModule('DASHBOARD')} className="mt-10 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs tracking-widest shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
+              KEMBALI KE DASHBOARD
             </button>
           </div>
         );
@@ -207,54 +290,48 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} />
+    <div className="min-h-screen bg-slate-50 selection:bg-blue-100 selection:text-blue-900">
+      <Sidebar activeModule={activeModule} setActiveModule={(mod) => { setActiveModule(mod); setActiveHemTab('MENU'); }} />
       
-      <main className="lg:ml-64 p-4 lg:p-8 pb-24 lg:pb-8">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <main className="lg:ml-64 p-4 lg:p-12 pb-32 lg:pb-12">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 leading-tight">
-              {MENU_ITEMS.find(m => m.id === activeModule)?.label || 'SiPDS'}
-            </h1>
-            <p className="text-slate-500 text-sm font-medium">{SCHOOL_NAME} • {SCHOOL_CODE}</p>
+            <h1 className="text-3xl font-black text-slate-900 leading-none tracking-tighter">SiPDS SK Kemasek</h1>
+            <div className="flex items-center space-x-2 mt-2">
+               <span className="text-xs font-black text-blue-600 uppercase tracking-widest">{SCHOOL_CODE}</span>
+               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{SCHOOL_NAME}</span>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Cari maklumat..." 
-                className="bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-full md:w-64 transition-all"
-              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+              <input type="text" placeholder="Cari data guru, murid..." className="bg-white border border-slate-200 rounded-2xl pl-12 pr-6 py-3 text-sm focus:ring-2 focus:ring-blue-100 border-none shadow-sm outline-none w-full md:w-80 transition-all placeholder:text-slate-300 font-medium" />
             </div>
-            <button className="bg-white border border-slate-200 p-2 rounded-xl text-slate-600 hover:bg-slate-50 relative transition-colors">
+            <button className="bg-white border-none p-3.5 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 relative transition-all shadow-sm">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+              <span className="absolute top-3.5 right-3.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white shadow-sm"></span>
             </button>
           </div>
         </header>
 
-        {/* Content */}
-        {renderModuleContent()}
-
-        {/* Floating AI Assistant */}
+        <div className="max-w-7xl mx-auto">
+          {renderModuleContent()}
+        </div>
+        
         <GeminiAssistant />
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-3 flex justify-between items-center z-40">
+      {/* Mobile Bottom Nav */}
+      <nav className="lg:hidden fixed bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-white/50 px-8 py-4 rounded-[2.5rem] flex justify-between items-center z-40 shadow-2xl shadow-slate-200">
         {MENU_ITEMS.slice(0, 5).map((item) => (
           <button 
             key={item.id}
-            onClick={() => setActiveModule(item.id as ModuleType)}
-            className={`flex flex-col items-center space-y-1 ${
-              activeModule === item.id ? 'text-blue-600' : 'text-slate-400'
-            }`}
+            onClick={() => { setActiveModule(item.id as ModuleType); setActiveHemTab('MENU'); }}
+            className={`flex flex-col items-center space-y-1 transition-all duration-300 ${activeModule === item.id ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
           >
             {item.icon}
-            <span className="text-[10px] font-bold uppercase tracking-tighter">{item.id.slice(0, 4)}</span>
           </button>
         ))}
       </nav>
